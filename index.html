@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You're Invited! — Birthday RSVP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --CORAL: #FF6B6B;
+      --CORAL-DARK: #E5484D;
+      --SKY: #4DBBFF;
+      --SKY-DARK: #2196E0;
+      --YELLOW: #FFD23F;
+      --YELLOW-DARK: #F2B705;
+      --GREEN: #5FD068;
+      --GREEN-DARK: #3DAE47;
+      --FOREST: #3E8E41;
+      --CREAM: #FFFAF0;
+      --INK: #3A2E2E;
+      --INK-SOFT: #6B5C5C;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow-x: hidden; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #FFF6E5 0%, var(--CREAM) 40%, #FFF0E0 100%);
+      font-family: 'Quicksand', sans-serif;
+      color: var(--INK);
+      position: relative;
+    }
+
+    /* ============ SCREEN 1: Garden Opening Reveal ============ */
+    #garden-screen {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+      overflow: hidden;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+      background: linear-gradient(180deg, #E2F5E5 0%, #F5FBF6 60%, #FFFBEA 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #garden-screen.dismissed {
+      opacity: 0;
+      transform: scale(1.05);
+      pointer-events: none;
+    }
+
+    .garden-decor {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.85;
+    }
+    .vine-left { top: -20px; left: -20px; width: 40vw; max-width: 220px; transform: rotate(-5deg); transition: transform 0.8s cubic-bezier(.34,1.56,.64,1); }
+    .vine-right { top: -20px; right: -20px; width: 40vw; max-width: 220px; transform: rotate(5deg) scaleX(-1); transition: transform 0.8s cubic-bezier(.34,1.56,.64,1); }
+    
+    #garden-screen.dismissed .vine-left { transform: translate(-80px, -40px) rotate(-25deg); }
+    #garden-screen.dismissed .vine-right { transform: translate(80px, -40px) rotate(25deg) scaleX(-1); }
+
+    #garden-heading {
+      text-align: center;
+      z-index: 5;
+      margin-bottom: 40px;
+      padding: 0 20px;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    #garden-heading.faded { opacity: 0; transform: translateY(-10px); }
+    #garden-heading h1 {
+      font-family: 'Baloo 2', cursive;
+      font-size: clamp(34px, 9vw, 54px);
+      color: var(--FOREST);
+      line-height: 1.1;
+      text-shadow: 2px 2px 0 rgba(255,255,255,0.8);
+    }
+    #garden-heading p {
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 600;
+      font-size: clamp(13px, 3.4vw, 16px);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--INK-SOFT);
+      margin-top: 8px;
+    }
+
+    .gate-container {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+    
+    .gate-wing {
+      position: absolute;
+      width: 50%;
+      height: 100%;
+      top: 0;
+      transition: transform 0.8s cubic-bezier(.4, 0, .2, 1);
+    }
+    .gate-left {
+      left: 0;
+      transform-origin: left center;
+    }
+    .gate-right {
+      right: 0;
+      transform-origin: right center;
+    }
+
+    .gate-container.opened .gate-left { transform: rotateY(-110deg); }
+    .gate-container.opened .gate-right { transform: rotateY(110deg); }
+
+    #garden-hint {
+      margin-top: 40px;
+      text-align: center;
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--FOREST);
+      z-index: 5;
+      animation: pulse-grow 2s ease-in-out infinite;
+      transition: opacity 0.4s ease;
+    }
+    #garden-hint.faded { opacity: 0; }
+
+    @keyframes pulse-grow {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+    }
+
+    /* ============ SCREEN 2: RSVP flow ============ */
+    #app-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .fade-up { animation: fadeUp 0.6s cubic-bezier(.22,1,.36,1) both; }
+    @keyframes fadeUp { from { opacity:0; transform: translateY(16px) scale(0.98);} to {opacity:1; transform: translateY(0) scale(1);} }
+    .btn-tap:active { transform: scale(0.96); }
+    input:focus, textarea:focus { outline: 3px solid var(--SKY); outline-offset: 1px; }
+
+    .card-container {
+      width: 100%;
+      max-width: 440px;
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 24px 50px -16px rgba(40,60,45,0.2);
+      position: relative;
+      overflow: hidden;
+      border: 4px solid var(--GREEN);
+    }
+
+    .card-content { padding: 32px 26px 28px; }
+
+    .progress-wrapper { margin-bottom: 20px; }
+    .progress-bg { height: 10px; background: #E2F5E5; border-radius: 99px; overflow: hidden; }
+    
+    /* Filled part is now a solid, cohesive green */
+    .progress-fill { width: 0%; height: 100%; background: var(--GREEN); transition: width 0.5s cubic-bezier(.22,1,.36,1); border-radius: 99px; }
+
+    .eyebrow { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--GREEN-DARK); text-align: center; margin-bottom: 6px; }
+    .input-style { width: 100%; padding: 12px 14px; border: 2.5px solid #CBECCF; border-radius: 14px; font-family: 'Quicksand', sans-serif; font-weight: 500; font-size: 16px; color: var(--INK); background: #FFFCF5; transition: border-color 0.2s; }
+    .label-style { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 13px; color: var(--INK-SOFT); margin-bottom: 6px; display: block; }
+
+    .step-panel { display: none; text-align: center; }
+    .step-panel.active { display: block; }
+    .left-align { text-align: left; }
+
+    .stepper { display: inline-flex; align-items: center; border: 2.5px solid var(--GREEN); border-radius: 14px; background: #F3FBF4; margin-bottom: 8px; }
+    .stepper button { width: 40px; height: 40px; border: none; background: transparent; font-size: 20px; font-weight: 700; color: var(--GREEN-DARK); cursor: pointer; font-family: inherit; }
+    .stepper span { width: 30px; text-align: center; font-size: 17px; font-weight: 700; color: var(--INK); }
+
+    .submit-btn { width: 100%; background: var(--GREEN); color: #fff; border: none; padding: 16px; font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 17px; letter-spacing: 0.02em; border-radius: 16px; cursor: pointer; box-shadow: 0 6px 0 var(--GREEN-DARK); transition: transform 0.1s, box-shadow 0.1s; }
+    .submit-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--GREEN-DARK); }
+
+    .yes-btn { background: var(--CORAL); box-shadow: 0 6px 0 var(--CORAL-DARK); }
+    .no-btn { background: #fff; color: var(--INK-SOFT); border: 2.5px solid #e8ddd0; box-shadow: 0 6px 0 #e8ddd0; }
+    
+    .error-text { font-size: 12px; color: var(--CORAL-DARK); font-weight: 600; margin-top: 4px; display: block; min-height: 16px; }
+  </style>
+</head>
+<body>
+
+  <!-- ============ SCREEN 1: Garden Reveal ============ -->
+  <div id="garden-screen">
+    <svg class="garden-decor vine-left" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,0 Q30,10 50,40 T90,70" fill="none" stroke="#5FD068" stroke-width="6" stroke-linecap="round"/>
+      <path d="M30,12 Q10,25 20,40 Q35,30 30,12 Z" fill="#3DAE47"/>
+      <path d="M50,40 Q40,60 55,70 Q65,55 50,40 Z" fill="#5FD068"/>
+      <circle cx="85" cy="65" r="8" fill="#FF6B6B"/>
+    </svg>
+    <svg class="garden-decor vine-right" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,0 Q30,10 50,40 T90,70" fill="none" stroke="#5FD068" stroke-width="6" stroke-linecap="round"/>
+      <path d="M30,12 Q10,25 20,40 Q35,30 30,12 Z" fill="#3DAE47"/>
+      <path d="M50,40 Q40,60 55,70 Q65,55 50,40 Z" fill="#5FD068"/>
+      <circle cx="85" cy="65" r="7" fill="#FFD23F"/>
+    </svg>
+
+    <div id="garden-heading">
+      <h1>A Secret Invitation</h1>
+      <p>Open the garden gate to look inside</p>
+    </div>
+
+    <div class="gate-container" id="interactive-gate" onclick="openGardenGate()">
+      <div class="gate-wing gate-left">
+        <svg viewBox="0 0 100 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <rect x="5" y="5" width="90" height="190" rx="15" fill="#B58A63" stroke="#8C6239" stroke-width="4"/>
+          <line x1="5" y1="40" x2="95" y2="40" stroke="#8C6239" stroke-width="4"/>
+          <line x1="5" y1="160" x2="95" y2="160" stroke="#8C6239" stroke-width="4"/>
+          <circle cx="50" cy="100" r="16" fill="none" stroke="#734B26" stroke-width="4"/>
+          <circle cx="50" cy="100" r="6" fill="#FFD23F"/>
+          <circle cx="85" cy="100" r="5" fill="#3A2E2E"/>
+        </svg>
+      </div>
+      <div class="gate-wing gate-right">
+        <svg viewBox="0 0 100 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <rect x="5" y="5" width="90" height="190" rx="15" fill="#B58A63" stroke="#8C6239" stroke-width="4"/>
+          <line x1="5" y1="40" x2="95" y2="40" stroke="#8C6239" stroke-width="4"/>
+          <line x1="5" y1="160" x2="95" y2="160" stroke="#8C6239" stroke-width="4"/>
+          <circle cx="50" cy="100" r="16" fill="none" stroke="#734B26" stroke-width="4"/>
+          <circle cx="50" cy="100" r="6" fill="#FFD23F"/>
+          <circle cx="15" cy="100" r="5" fill="#3A2E2E"/>
+        </svg>
+      </div>
+    </div>
+
+    <p id="garden-hint">Tap to Open 🌟</p>
+  </div>
+
+  <!-- ============ SCREEN 2: RSVP flow ============ -->
+  <div id="app-screen">
+    <div id="main-card" class="card-container">
+      <div class="card-content">
+
+        <div class="progress-wrapper">
+          <div class="progress-bg"><div id="progress-bar" class="progress-fill"></div></div>
+        </div>
+
+        <div id="step-greeting" class="step-panel active">
+          <div style="font-size: 48px; margin-bottom: 6px;">🌸🎂🎉</div>
+          <div class="eyebrow">It's A Party!</div>
+          <h1 style="font-family: 'Baloo 2', cursive; font-size: 42px; line-height: 1.05; margin: 4px 0 10px; color: var(--FOREST);">Maya is turning 7!</h1>
+          <p style="font-size: 16px; color: var(--INK-SOFT); line-height: 1.6; margin: 0 0 22px; font-weight: 500;">Come celebrate with games, cake, and so much fun — we'd love for you to be there!</p>
+
+          <div style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 15px; color: var(--INK); margin-bottom: 26px; display: flex; flex-direction: column; gap: 8px; align-items: center;">
+            <span style="display: inline-flex; align-items: center; gap: 8px; background: #E2F5E5; padding: 8px 16px; border-radius: 99px; text-align: center;">
+              📅 Saturday, August 8th · 2:00 PM
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 8px; background: #FFF0D9; padding: 8px 16px; border-radius: 99px; text-align: center;">
+              📍 12 Sunflower Lane, Accra
+            </span>
+          </div>
+
+          <button class="submit-btn btn-tap" onclick="goToStage('attending')">Let's RSVP!</button>
+        </div>
+
+        <div id="step-attending" class="step-panel">
+          <div style="font-size: 40px; margin-bottom: 8px;">🙋</div>
+          <div class="eyebrow">Quick Question</div>
+          <h2 style="font-family: 'Baloo 2', cursive; font-size: 26px; color: var(--INK); margin-bottom: 24px;">Can you make it?</h2>
+
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="submit-btn yes-btn btn-tap" onclick="chooseAttending(true)">🎉 Yes, we'll be there!</button>
+            <button class="submit-btn no-btn btn-tap" onclick="chooseAttending(false)">😢 Sorry, can't make it</button>
+          </div>
+        </div>
+
+        <div id="step-details" class="step-panel left-align">
+          <div class="eyebrow" style="text-align: center;">Yay! A Few Details</div>
+          <h2 style="font-family: 'Baloo 2', cursive; font-size: 24px; color: var(--INK); margin-bottom: 20px; text-align: center;">So excited to see you! 🎊</h2>
+
+          <div style="margin-bottom: 12px;">
+            <label class="label-style">How many kiddos coming? (up to 3)</label>
+            <div class="stepper">
+              <button type="button" onclick="changeGuestCount(-1)">−</button>
+              <span id="guest-count-label">1</span>
+              <button type="button" onclick="changeGuestCount(1)">+</button>
+            </div>
+          </div>
+
+          <div id="dynamic-guests"></div>
+
+          <div style="margin-bottom: 16px;">
+            <label class="label-style">Any allergies we should know about?</label>
+            <input id="dietary-input" class="input-style" placeholder="e.g. peanut allergy">
+          </div>
+          <div style="margin-bottom: 24px;">
+            <label class="label-style">A birthday wish for Maya (optional)</label>
+            <input id="song-input" class="input-style" placeholder="Write a sweet note...">
+          </div>
+
+          <button class="submit-btn btn-tap" onclick="submitForm(true)">Confirm RSVP 🌸</button>
+        </div>
+
+        <div id="step-note" class="step-panel">
+          <div style="font-size: 40px; margin-bottom: 8px;">💌</div>
+          <div class="eyebrow">We'll Miss You</div>
+          <h2 style="font-family: 'Baloo 2', cursive; font-size: 24px; color: var(--INK); margin-bottom: 18px;">Leave Maya a birthday note</h2>
+          <textarea id="decline-note" class="input-style" rows="4" style="resize: none; margin-bottom: 24px;" placeholder="Happy birthday, Maya! Hope you have..."></textarea>
+          <button class="submit-btn btn-tap" onclick="submitForm(false)">Send Note 💌</button>
+        </div>
+
+        <div id="step-confirmed" class="step-panel">
+          <div id="confirmed-emoji" style="font-size: 56px; margin-bottom: 10px;">🎉</div>
+          <div class="eyebrow">All Set!</div>
+          <h2 id="confirmed-title" style="font-family: 'Baloo 2', cursive; font-size: 26px; color: var(--INK); margin-bottom: 10px;"></h2>
+          <p id="confirmed-desc" style="font-size: 15px; color: var(--INK-SOFT); line-height: 1.6; margin-bottom: 22px; font-weight: 500;"></p>
+
+          <div style="font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 14px; color: var(--INK); background: #E2F5E5; border-radius: 16px; padding: 14px 18px; display: inline-flex; flex-direction: column; gap: 6px; text-align: left; width: 100%;">
+            <span>📅 Saturday, August 8th · 2:00 PM</span>
+            <span>📍 12 Sunflower Lane, Accra</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====================================================================
+    // SCREEN 1: Garden Gate Logic
+    // ====================================================================
+    let gateOpened = false;
+
+    function openGardenGate() {
+      if (gateOpened) return;
+      gateOpened = true;
+
+      const gate = document.getElementById('interactive-gate');
+      gate.classList.add('opened');
+
+      document.getElementById('garden-hint').classList.add('faded');
+      document.getElementById('garden-heading').classList.add('faded');
+
+      setTimeout(() => {
+        document.getElementById('garden-screen').classList.add('dismissed');
+      }, 600);
+
+      setTimeout(() => {
+        document.getElementById('garden-screen').style.display = 'none';
+        const mainCard = document.getElementById('main-card');
+        mainCard.classList.remove('fade-up');
+        void mainCard.offsetWidth;
+        mainCard.classList.add('fade-up');
+        goToStage('greeting');
+      }, 1300);
+    }
+
+    // ====================================================================
+    // SCREEN 2: RSVP Form Mechanics
+    // ====================================================================
+    let currentStage = "garden";
+    let isAttending = null;
+    let totalGuests = 1;
+    const maxGuestsAllowed = 3;
+
+    const progressMap = { garden: 0, greeting: 25, attending: 50, details: 75, note: 75, confirmed: 100 };
+
+    function goToStage(stageName) {
+      currentStage = stageName;
+      document.getElementById('progress-bar').style.width = progressMap[stageName] + '%';
+
+      document.querySelectorAll('.step-panel').forEach(panel => panel.classList.remove('active'));
+      const activePanel = document.getElementById('step-' + stageName);
+      if (activePanel) activePanel.classList.add('active');
+
+      if (stageName === 'details') {
+        renderGuestFields();
+      }
+    }
+
+    function chooseAttending(status) {
+      isAttending = status;
+      setTimeout(() => {
+        goToStage(status ? 'details' : 'note');
+      }, 300);
+    }
+
+    function changeGuestCount(change) {
+      const newCount = totalGuests + change;
+      if (newCount >= 1 && newCount <= maxGuestsAllowed) {
+        totalGuests = newCount;
+        document.getElementById('guest-count-label').innerText = totalGuests;
+        renderGuestFields();
+      }
+    }
+
+    function renderGuestFields() {
+      const container = document.getElementById('dynamic-guests');
+      let html = '';
+
+      for (let i = 0; i < totalGuests; i++) {
+        html += `
+          <div style="margin-bottom: 12px; padding-bottom: 4px; border-bottom: ${i < totalGuests - 1 ? '2px dashed #CBECCF' : 'none'};">
+            <label class="label-style">Kid ${i + 1}'s name</label>
+            <input id="guest-name-${i}" class="input-style" placeholder="Full name">
+            <span id="error-${i}" class="error-text" style="visibility: hidden;">Please enter a name</span>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    function submitForm(attendingStatus) {
+      if (attendingStatus) {
+        let hasErrors = false;
+        for (let i = 0; i < totalGuests; i++) {
+          const nameInput = document.getElementById(`guest-name-${i}`);
+          const errorMsg = document.getElementById(`error-${i}`);
+          if (!nameInput.value.trim()) {
+            nameInput.style.borderColor = "var(--CORAL-DARK)";
+            errorMsg.style.visibility = "visible";
+            hasErrors = true;
+          } else {
+            nameInput.style.borderColor = "#CBECCF";
+            errorMsg.style.visibility = "hidden";
+          }
+        }
+        if (hasErrors) return;
+      }
+
+      if (isAttending) {
+        document.getElementById('confirmed-emoji').innerText = "🌸";
+        document.getElementById('confirmed-title').innerText = "Woohoo, see you there!";
+        document.getElementById('confirmed-desc').innerText = "Maya can't wait to celebrate with you in the garden. Get ready for treats and games!";
+      } else {
+        document.getElementById('confirmed-emoji').innerText = "💌";
+        document.getElementById('confirmed-title').innerText = "Thanks for letting us know!";
+        document.getElementById('confirmed-desc').innerText = "We'll miss you, but Maya will be thrilled to read your sweet note.";
+      }
+
+      goToStage('confirmed');
+    }
+  </script>
+</body>
+</html>
